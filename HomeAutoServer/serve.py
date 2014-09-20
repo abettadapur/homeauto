@@ -9,5 +9,6 @@ api.add_resource(restapi.System, '/system')
 api.add_resource(restapi.Modules, '/modules')
 api.add_resource(restapi.Module, '/module/<string:module_id>')
 
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', debug=True)
