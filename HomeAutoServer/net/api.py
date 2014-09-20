@@ -6,7 +6,7 @@ import uuid
 modules = {'modules': [
             {'id': str(uuid.uuid4()),'type': 0}, #flip
             {'id': str(uuid.uuid4()),'type': 1}, #rotary,
-            {'id': str(uuid.uuid4()),'type': 2}, #poke
+            #{'id': str(uuid.uuid4()),'type': 2}, #poke
         ]}
 class System(Resource):
     def get(self):
