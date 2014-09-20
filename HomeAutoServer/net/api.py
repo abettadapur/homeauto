@@ -1,3 +1,4 @@
+from flask import request
 from flask_restful import Resource, reqparse
 
 
@@ -7,14 +8,12 @@ class System(Resource):
 
 
 class Module(Resource):
-    def get(self):
-        return {'status': 'More module messages'}, 200
+    def get(self, module_id):
+        return {'status': 'More module messages', 'module_id': module_id}, 200
 
-    def post(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument('operation', type=str)
-        args = parser.parse_args()
-        operation = args['operation']
+    def post(self, module_id):
+        json_data = request.get_json(force=True)
+        operation = json_data['operation']
         return {'status': 'You posted this data', 'data': operation}
 
 
