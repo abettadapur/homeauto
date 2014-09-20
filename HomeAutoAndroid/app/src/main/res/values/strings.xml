@@ -2,7 +2,8 @@
 <resources>
 
     <string name="app_name">HomeAutoAndroid</string>
-    <string name="hello_world">Hello world!</string>
+    <string name="button_on">ON</string>
+    <string name="button_off">OFF</string>
     <string name="action_settings">Settings</string>
 
 </resources>
