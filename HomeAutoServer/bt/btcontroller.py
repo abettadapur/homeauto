@@ -1,7 +1,7 @@
 import bluetooth
 import os
 from bluetooth import *
-from control import orchestrator
+import control
 
 class BluetoothServer(object):
 
@@ -16,6 +16,7 @@ class BluetoothServer(object):
         return devices
 
     def serve(self):
+        print("serving")
         self.server_socket.bind(('', PORT_ANY))
         self.server_socket.listen(1)
         self.port = self.server_socket.getsockname()[1]
@@ -28,9 +29,14 @@ class BluetoothServer(object):
             print("Accepted connection from ", client_info)
             #some handshake
             self.connected_sockets.append((client_sock, client_info))
-            client_sock.rfcomm_send('{"command": "handshake"}')
-            data = client_sock.rfcomm_read_msg()
-            orchestrator.register_module(client_sock, client_info, data)
+
+            client_sock.send('{"command": "handshake", "params": ""}')
+
+            data = client_sock.recv(1024)
+            if len(data) == 0:
+                client_sock.close()
+
+            control.orchestrator.register_module(client_sock, client_info, data)
 
 if __name__ == "__main__":
     bt = BluetoothServer()
