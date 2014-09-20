@@ -25,8 +25,12 @@ class BluetoothServer(object):
 
         results = find_service("HomeAutoService")
 
-        for result in results:
-            self.server_socket.connect((result['host'], result['port']))
+        try:
+            for result in results:
+                print "Trying "+result
+                self.server_socket.connect((result['host'], result['port']))
+        except BluetoothError:
+            print "Could not connect to device"
 
 
         #advertise_service(self.server_socket, "HomeAutoService", service_id=self.uuid, service_classes=[self.uuid, SERIAL_PORT_CLASS], profiles=[SERIAL_PORT_PROFILE])

@@ -86,8 +86,8 @@
       <file leaf-file-name="btcontroller.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/bt/btcontroller.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.4361949" vertical-offset="92" max-vertical-offset="954">
-              <caret line="29" column="0" selection-start-line="29" selection-start-column="0" selection-end-line="29" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.4361949" vertical-offset="92" max-vertical-offset="1026">
+              <caret line="29" column="32" selection-start-line="29" selection-start-column="32" selection-end-line="29" selection-end-column="32" />
               <folding />
             </state>
           </provider>
@@ -149,8 +149,8 @@
         <option value="$PROJECT_DIR$/model/flip.py" />
         <option value="$PROJECT_DIR$/model/rotary.py" />
         <option value="$PROJECT_DIR$/model/poke.py" />
-        <option value="$PROJECT_DIR$/bt/btcontroller.py" />
         <option value="$PROJECT_DIR$/serve.py" />
+        <option value="$PROJECT_DIR$/bt/btcontroller.py" />
       </list>
     </option>
   </component>
@@ -544,7 +544,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/bt/btcontroller.py</url>
-          <line>32</line>
+          <line>36</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
@@ -958,8 +958,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/bt/btcontroller.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.4361949" vertical-offset="92" max-vertical-offset="954">
-          <caret line="29" column="0" selection-start-line="29" selection-start-column="0" selection-end-line="29" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.4361949" vertical-offset="92" max-vertical-offset="1026">
+          <caret line="29" column="32" selection-start-line="29" selection-start-column="32" selection-end-line="29" selection-end-column="32" />
           <folding />
         </state>
       </provider>
