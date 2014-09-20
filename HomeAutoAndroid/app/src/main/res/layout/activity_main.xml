@@ -8,13 +8,12 @@
     android:paddingBottom="@dimen/activity_vertical_margin"
     tools:context=".MainActivity">
 
-    <Button
-        android:id="@+id/on_off_button"
+    <ListView
+        android:paddingTop="20dip"
+        android:id="@+id/module_list"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
-        android:background="@drawable/circle"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:text="@string/button_off"/>
-
+        android:dividerHeight="10dip"
+        android:divider="#80ffffff"
+        android:gravity="center_horizontal"/>
 </RelativeLayout>
