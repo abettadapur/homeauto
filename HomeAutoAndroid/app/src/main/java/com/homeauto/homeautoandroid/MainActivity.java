@@ -6,14 +6,13 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.homeauto.homeautoandroid.App.App;
@@ -27,12 +26,13 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 public class MainActivity extends Activity {
+    // State persistence variables
     private final Context CONTEXT = this;
     private boolean running = true;
 
+    // Model persistence variables
     private ModuleAdapter adapter;
     private ArrayList<Module> modules;
-    private ArrayList<Boolean> moduleStates;
     private ListView listView;
 
     /**
@@ -47,17 +47,10 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         modules = new ArrayList<Module>();
-        adapter = new ModuleAdapter(CONTEXT, R.layout.list_item, modules);
+        adapter = new ModuleAdapter(CONTEXT, R.layout.list_item_on_off, modules);
 
         listView = ((ListView)findViewById(R.id.module_list));
         listView.setAdapter(adapter);
-
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                view.setActivated(!view.isActivated());
-            }
-        });
     }
 
     @Override
@@ -101,29 +94,24 @@ public class MainActivity extends Activity {
     private void scanForAvailableModules() {
         // Instantiate the RequestQueue.
         RequestQueue queue = Volley.newRequestQueue(this);
-        String url = App.BASE_URL + "modules";
 
         // Request a string response from the provided URL.
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
-                new Response.Listener<JSONObject>() {
+        JsonArrayRequest request = new JsonArrayRequest(
+                App.Url.GET_ALL_MODULES, new Response.Listener<JSONArray>() {
                     @Override
-                    public void onResponse(JSONObject response) {
+                    public void onResponse(JSONArray response) {
                         Log.v("LOG", response.toString());
-                        JSONArray resModules = null;
-                        try {
-                            resModules = response.getJSONArray("modules");
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            // bail early if we didn't get a legit response.
-                            return;
-                        }
 
                         ArrayList<Module> removeList = new ArrayList<Module>();
-                        for (int i=0; i<resModules.length(); i++) {
+                        for (int i=0; i<response.length(); i++) {
                             try {
-                                JSONObject obj = resModules.getJSONObject(i);
+                                JSONObject obj = response.getJSONObject(i);
 
-                                Module tmp = new Module(obj.getString("id"), obj.getInt("type"));
+                                Module tmp = new Module(obj.getString("id"),
+                                        obj.getString("name"),
+                                        obj.getInt("type"),
+                                        obj.getString("address"),
+                                        obj.getString("client_socket"));
 
                                 if (!modules.contains(tmp)) {
                                     modules.add(tmp);
