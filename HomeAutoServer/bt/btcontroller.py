@@ -1,6 +1,5 @@
 import bluetooth
 from bluetooth import *
-from btle import UUID, Peripheral
 
 class BluetoothServer(object):
 
