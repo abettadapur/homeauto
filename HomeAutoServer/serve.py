@@ -1,9 +1,12 @@
+import threading
 from flask import Flask
 from flask_restful import Api
+import time
 from net import api as restapi
 from bt.btcontroller import BluetoothServer
 from gevent.pywsgi import WSGIServer
 import gevent
+from gevent import monkey
 
 app = Flask(__name__)
 BtController = BluetoothServer()
@@ -21,9 +24,10 @@ if __name__ == '__main__':
     )
 
 
-    btgl = gevent.spawn(BtController.serve())
-    httpgl = gevent.spawn(http_server.serve_forever())
+    btgl = threading.Thread(target=BtController.serve)
+    btgl.setDaemon(True)
     btgl.start()
-    httpgl.start()
+
+    http_server.serve_forever()
 
 

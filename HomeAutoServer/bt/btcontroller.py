@@ -17,12 +17,19 @@ class BluetoothServer(object):
 
     def serve(self):
         print("serving")
-        self.server_socket.bind(('', PORT_ANY))
-        self.server_socket.listen(1)
-        self.port = self.server_socket.getsockname()[1]
+        # self.server_socket.bind(('', PORT_ANY))
+        # self.server_socket.listen(1)
+        # self.port = self.server_socket.getsockname()[1]
+
         os.system("hciconfig hci0 piscan")   # make my device discoverable
 
-        advertise_service(self.server_socket, "HomeAutoService", service_id=self.uuid, service_classes=[self.uuid, SERIAL_PORT_CLASS], profiles=[SERIAL_PORT_PROFILE])
+        results = find_service("HomeAutoService")
+
+        for result in results:
+            self.server_socket.connect((result['host'], result['port']))
+
+
+        #advertise_service(self.server_socket, "HomeAutoService", service_id=self.uuid, service_classes=[self.uuid, SERIAL_PORT_CLASS], profiles=[SERIAL_PORT_PROFILE])
 
         while True:
             client_sock, client_info = self.server_socket.accept()
