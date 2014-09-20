@@ -1,6 +1,8 @@
 import bluetooth
+import os
 from bluetooth import *
 from btle import UUID, Peripheral
+from control import orchestrator
 
 class BluetoothServer(object):
 
@@ -18,13 +20,18 @@ class BluetoothServer(object):
         self.server_socket.bind(('', PORT_ANY))
         self.server_socket.listen(1)
         self.port = self.server_socket.getsockname()[1]
+        os.system("hciconfig hci0 piscan")   # make my device discoverable
 
-        advertise_service(self.server_socket, 'HomeAutoServer', service_id=self.uuid, service_classes=[self.uuid, SERIAL_PORT_CLASS], profiles=[SERIAL_PORT_PROFILE])
+        advertise_service(self.server_socket, "HomeAutoService", service_id=self.uuid, service_classes=[self.uuid, SERIAL_PORT_CLASS], profiles=[SERIAL_PORT_PROFILE])
+
         while True:
             client_sock, client_info = self.server_socket.accept()
             print("Accepted connection from ", client_info)
             #some handshake
             self.connected_sockets.append((client_sock, client_info))
+            client_sock.rfcomm_send('{"command": "handshake"}')
+            data = client_sock.rfcomm_read_msg()
+            orchestrator.register_module(client_sock, client_info, data)
 
 if __name__ == "__main__":
     bt = BluetoothServer()

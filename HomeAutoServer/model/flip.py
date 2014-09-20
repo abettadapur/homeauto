@@ -4,8 +4,8 @@ from model.module import ModuleBase
 
 class FlipModule(ModuleBase):
 
-    def __init__(self, id, address):
-        super(ModuleBase, self).__init__(id, address, consts.FLIP_MODULE_TYPE)
+    def __init__(self, id, address, socket):
+        super(ModuleBase, self).__init__(id, address, consts.FLIP_MODULE_TYPE, socket)
 
     def action(self, **kwargs):
         pass
