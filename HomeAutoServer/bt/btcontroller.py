@@ -1,7 +1,6 @@
 import bluetooth
 import os
 from bluetooth import *
-from btle import UUID, Peripheral
 from control import orchestrator
 
 class BluetoothServer(object):
