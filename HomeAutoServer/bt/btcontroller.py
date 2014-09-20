@@ -24,7 +24,7 @@ class BluetoothServer(object):
         os.system("hciconfig hci0 piscan")   # make my device discoverable
 
         results = find_service("HomeAutoService")
-
+        print results
         try:
             for result in results:
                 print "Trying "+result
@@ -35,19 +35,19 @@ class BluetoothServer(object):
 
         #advertise_service(self.server_socket, "HomeAutoService", service_id=self.uuid, service_classes=[self.uuid, SERIAL_PORT_CLASS], profiles=[SERIAL_PORT_PROFILE])
 
-        while True:
-            client_sock, client_info = self.server_socket.accept()
-            print("Accepted connection from ", client_info)
-            #some handshake
-            self.connected_sockets.append((client_sock, client_info))
-
-            client_sock.send('{"command": "handshake", "params": ""}')
-
-            data = client_sock.recv(1024)
-            if len(data) == 0:
-                client_sock.close()
-
-            control.orchestrator.register_module(client_sock, client_info, data)
+        # while True:
+        #     client_sock, client_info = self.server_socket.accept()
+        #     print("Accepted connection from ", client_info)
+        #     #some handshake
+        #     self.connected_sockets.append((client_sock, client_info))
+        #
+        #     client_sock.send('{"command": "handshake", "params": ""}')
+        #
+        #     data = client_sock.recv(1024)
+        #     if len(data) == 0:
+        #         client_sock.close()
+        #
+        #     control.orchestrator.register_module(client_sock, client_info, data)
 
 if __name__ == "__main__":
     bt = BluetoothServer()
