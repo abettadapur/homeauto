@@ -21,9 +21,9 @@
         android:orientation="horizontal"
         android:layout_margin="5dip">
 
-        <ToggleButton
+        <SeekBar
             android:id="@+id/toggle_switch"
-            android:layout_width="wrap_content"
+            android:layout_width="200dp"
             android:layout_height="wrap_content"
             android:layout_marginRight="10dip"
             android:paddingBottom="20dip"/>

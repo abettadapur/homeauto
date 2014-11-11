@@ -39,6 +39,10 @@ public class Module {
         return (m instanceof Module) && ((Module)m).getId().equals(this.id);
     }
 
+    public int hashCode() {
+        return getId().hashCode();
+    }
+
     public String toString() {
         return "{id : " + id + ", type = " + type +"}";
     }

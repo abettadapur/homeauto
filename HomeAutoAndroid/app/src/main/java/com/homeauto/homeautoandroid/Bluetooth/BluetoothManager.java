@@ -7,7 +7,7 @@ import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.util.Log;
 
-import com.homeauto.homeautoandroid.App.App;
+import com.homeauto.homeautoandroid.Application.App;
 
 import java.io.IOException;
 

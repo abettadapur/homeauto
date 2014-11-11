@@ -9,12 +9,41 @@
     android:background="#eeeeee"
     tools:context=".MainActivity">
 
-    <ListView
-        android:paddingTop="20dip"
-        android:id="@+id/module_list"
-        android:layout_width="match_parent"
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <ListView
+            android:paddingTop="20dip"
+            android:id="@+id/module_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:dividerHeight="10dip"
+            android:divider="#eeeeee"/>
+
+        <Button
+            android:id="@+id/refresh_module_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/refresh_module_list"
+            android:layout_alignParentBottom="true"/>
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/connection_failed_layout"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:dividerHeight="10dip"
-        android:divider="#eeeeee"/>
+        android:layout_centerHorizontal="true"
+        android:visibility="gone">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Connection Error Click to Retry"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="retry"/>
+    </FrameLayout>
 </RelativeLayout>
