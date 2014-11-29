@@ -40,7 +40,7 @@ public class ModuleAdapter extends ArrayAdapter<Module> {
 
         View rowView;
 
-        Log.v("LOG",module.toString());
+        Log.v("LOG","called getView");
 
         // TODO: subclass?
         switch (module.getType()) {
@@ -69,12 +69,7 @@ public class ModuleAdapter extends ArrayAdapter<Module> {
         // Initialize the ToggleButton
         // TODO: we might need to do the interface trick and put it in Modules
         View button = rowView.findViewById(R.id.toggle_switch);
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.v("LOG", "clicked");
-            }
-        });
+        button.setOnClickListener(module.getOnClickListener());
 
         return rowView;
     }

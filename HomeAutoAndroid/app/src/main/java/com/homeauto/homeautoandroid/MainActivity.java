@@ -17,8 +17,10 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
+import com.homeauto.homeautoandroid.Application.QueueHandler;
 import com.homeauto.homeautoandroid.model.Module;
 import com.homeauto.homeautoandroid.model.ModuleAdapter;
+import com.homeauto.homeautoandroid.model.OnOffModule;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -64,11 +66,27 @@ public class MainActivity extends Activity {
                 try {
                     JSONObject obj = response.getJSONObject(i);
 
-                    Module tmp = new Module(obj.getString("id"),
-                            obj.getString("name"),
-                            obj.getInt("type"),
-                            obj.getString("address"),
-                            obj.getString("client_socket"));
+                    int type = obj.getInt("type");
+                    Module tmp;
+
+                    switch(type) {
+                        case 0:
+                            tmp = new OnOffModule(obj.getString("id"),
+                                    obj.getString("name"),
+                                    obj.getString("address"),
+                                    obj.getString("client_socket"),
+                                    CONTEXT
+                            );
+
+                            break;
+                        default:
+                            tmp = new Module(obj.getString("id"),
+                                    obj.getString("name"),
+                                    obj.getInt("type"),
+                                    obj.getString("address"),
+                                    obj.getString("client_socket"),
+                                    CONTEXT);
+                    }
 
                     modules.add(tmp);
                 } catch (JSONException e) {
@@ -134,12 +152,9 @@ public class MainActivity extends Activity {
      * TODO move to AutoHomeApplication Class.
      */
     private void scanForAvailableModules() {
-        // Instantiate the RequestQueue.
-        RequestQueue queue = Volley.newRequestQueue(this);
-
         // Request a string response from the provided URL.
         JsonArrayRequest request = new JsonArrayRequest(
-                Url.GET_ALL_MODULES,
+                Url.MODULES,
                 GetAllModuleResponseListener,
                 new Response.ErrorListener() {
                     @Override
@@ -149,8 +164,9 @@ public class MainActivity extends Activity {
                         //TODO: display an overlay
                     }
             });
+
         // Add the request to the RequestQueue.
-        queue.add(request);
+        QueueHandler.getInstance(this).addToRequestQueue(request);
     }
 
     @Override

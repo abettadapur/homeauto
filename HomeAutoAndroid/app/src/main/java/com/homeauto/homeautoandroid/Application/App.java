@@ -21,7 +21,8 @@ public class App {
         // Apriary Mocked Server
         private final static String BASE_URL = "http://private-e8ccb-homeauto1.apiary-mock.com/";
 
-        public final static String GET_ALL_MODULES = BASE_URL + "modules";
+        public final static String MODULES = BASE_URL + "modules";
+        public final static String MODULE = BASE_URL + "module/";
     }
 
     /**
