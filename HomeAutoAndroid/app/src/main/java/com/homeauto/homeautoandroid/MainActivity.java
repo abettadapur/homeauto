@@ -18,6 +18,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
 import com.homeauto.homeautoandroid.Application.QueueHandler;
+import com.homeauto.homeautoandroid.Bluetooth.Bluetooth;
 import com.homeauto.homeautoandroid.model.Module;
 import com.homeauto.homeautoandroid.model.ModuleAdapter;
 import com.homeauto.homeautoandroid.model.OnOffModule;
@@ -98,6 +99,7 @@ public class MainActivity extends Activity {
         }
     };
 
+    private Bluetooth bl;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -111,6 +113,9 @@ public class MainActivity extends Activity {
 
         Button refreshButton = (Button) findViewById(R.id.refresh_module_button);
         refreshButton.setOnClickListener(RefreshButtonListener);
+
+        bl = new Bluetooth(this);
+        bl.scanLeDevice(this,this,this,true);
     }
 
     @Override
@@ -166,7 +171,8 @@ public class MainActivity extends Activity {
             });
 
         // Add the request to the RequestQueue.
-        QueueHandler.getInstance(this).addToRequestQueue(request);
+        //QueueHandler.getInstance(this).addToRequestQueue(request);
+
     }
 
     @Override
