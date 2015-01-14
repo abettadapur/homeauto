@@ -1,54 +1,71 @@
-import bluetooth
 import os
-from bluetooth import *
-import control
+import signal
+import subprocess
+import threading
+import sys
+import time
+import commands
+import re
+import logging
+from utils import consts
+from model import *
 
-class BluetoothServer(object):
+
+from btle import Peripheral, Service, Characteristic, UUID
+
+
+class BtController(object):
 
     def __init__(self):
-        self.connected_sockets = []
-        self.server_socket = BluetoothSocket(RFCOMM)
-        self.uuid = 'cea00e7e-94b8-42fe-9e9f-713b8fb5580b'
-        #btle.
+        self.modules = {}
+        logging.basicConfig()
 
-    def discover_devices(self):
-        devices = bluetooth.discover_devices(duration=30, lookup_names = True)
-        return devices
+    def discover(self):
+        pattern = re.compile('^(\w\w:\w\w:\w\w:\w\w:\w\w:\w\w)(.+)')
+        print commands.getoutput("hcitool dev")
+        commands.getoutput('hciconfig hci1 down') ##how to here?
+        commands.getoutput('hciconfig hci1 up')
+        print commands.getoutput("hcitool dev")
+        commands.getoutput('killall hcitool')
+
+        p = subprocess.Popen('hcitool lescan', bufsize = 0,shell = True, stdout =subprocess.PIPE,stderr = subprocess.STDOUT)
+        time.sleep(3)
+
+        matches = []
+        for i in range(0,30,1):
+            inchar = p.stdout.readline()
+            match = pattern.match(inchar)
+            if match is not None:
+                device = (match.group(1), match.group(2))
+                if not device in matches:
+                    matches.append(device)
+
+        return matches
 
     def serve(self):
-        print("serving")
-        # self.server_socket.bind(('', PORT_ANY))
-        # self.server_socket.listen(1)
-        # self.port = self.server_socket.getsockname()[1]
+        pass
 
-        os.system("hciconfig hci0 piscan")   # make my device discoverable
+    #TODO(abettadapur): Need some database to store modules on device shutdown
 
-        results = find_service("HomeAutoService")
-        print results
-        try:
-            for result in results:
-                print "Trying "+result
-                self.server_socket.connect((result['host'], result['port']))
-        except BluetoothError:
-            print "Could not connect to device"
+    def add_module(self, address, type):
+        if type == consts.FLIP_MODULE_TYPE:
+            peripheral = Peripheral(address)
+            module = flip.Flip(0x0, address, consts.FLIP_MODULE_TYPE, peripheral)
+            self.modules[id] = module
+
+        elif type == consts.POKE_MODULE_TYPE:
+            peripheral = Peripheral(address)
+            module = poke.Poke(0x0, address, consts.POKE_MODULE_TYPE, peripheral)
+            self.modules[id] = module
+
+        elif type == consts.ROTARY_MODULE_TYPE:
+            peripheral = Peripheral(address)
+            module = rotary.Rotary(0x0, address, consts.ROTARY_MODULE_TYPE, peripheral)
+            self.modules[id] = modules
 
 
-        #advertise_service(self.server_socket, "HomeAutoService", service_id=self.uuid, service_classes=[self.uuid, SERIAL_PORT_CLASS], profiles=[SERIAL_PORT_PROFILE])
+    def action(self, id):
+        self.modules[id].action()
 
-        # while True:
-        #     client_sock, client_info = self.server_socket.accept()
-        #     print("Accepted connection from ", client_info)
-        #     #some handshake
-        #     self.connected_sockets.append((client_sock, client_info))
-        #
-        #     client_sock.send('{"command": "handshake", "params": ""}')
-        #
-        #     data = client_sock.recv(1024)
-        #     if len(data) == 0:
-        #         client_sock.close()
-        #
-        #     control.orchestrator.register_module(client_sock, client_info, data)
-
-if __name__ == "__main__":
-    bt = BluetoothServer()
-    bt.serve()
+    def status(self, id):
+        return self.modules[id].status()
