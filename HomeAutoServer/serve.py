@@ -23,11 +23,6 @@ if __name__ == '__main__':
         app
     )
 
-
-    btgl = threading.Thread(target=Bt.serve)
-    btgl.setDaemon(True)
-    btgl.start()
-
     http_server.serve_forever()
 
 

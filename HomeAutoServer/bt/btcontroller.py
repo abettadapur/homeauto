@@ -42,30 +42,3 @@ class BtController(object):
 
         return matches
 
-    def serve(self):
-        pass
-
-    #TODO(abettadapur): Need some database to store modules on device shutdown
-
-    def add_module(self, address, type):
-        if type == consts.FLIP_MODULE_TYPE:
-            peripheral = Peripheral(address)
-            module = flip.Flip(0x0, address, consts.FLIP_MODULE_TYPE, peripheral)
-            self.modules[id] = module
-
-        elif type == consts.POKE_MODULE_TYPE:
-            peripheral = Peripheral(address)
-            module = poke.Poke(0x0, address, consts.POKE_MODULE_TYPE, peripheral)
-            self.modules[id] = module
-
-        elif type == consts.ROTARY_MODULE_TYPE:
-            peripheral = Peripheral(address)
-            module = rotary.Rotary(0x0, address, consts.ROTARY_MODULE_TYPE, peripheral)
-            self.modules[id] = modules
-
-
-    def action(self, id):
-        self.modules[id].action()
-
-    def status(self, id):
-        return self.modules[id].status()
