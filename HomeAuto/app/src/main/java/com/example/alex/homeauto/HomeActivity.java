@@ -28,7 +28,7 @@ public class HomeActivity extends ActionBarActivity {
         mApi = new API("http://localhost");
 
         mApi.listModules(new ListCallback());
-        
+
     }
 
 
