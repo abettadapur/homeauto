@@ -2,6 +2,8 @@ package com.example.alex.homeauto.net;
 
 import com.example.alex.homeauto.model.Module;
 
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.List;
 
 import retrofit.Callback;
@@ -30,9 +32,11 @@ public class API
         moduleService.list(callback);
     }
 
-    public void actModule(Module module, String value)
+    public void actModule(Module module, String value, Callback<Module> cb)
     {
-        moduleService.act(module.getId(), value);
+        Dictionary<String, String> jsonBody = new Hashtable<>();
+        jsonBody.put("action", value);
+        moduleService.act(module.getId(), jsonBody, cb);
     }
 
     public void getModule(String id, Callback<Module> cb)

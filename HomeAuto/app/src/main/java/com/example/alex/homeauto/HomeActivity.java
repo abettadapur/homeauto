@@ -2,12 +2,17 @@ package com.example.alex.homeauto;
 
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ListView;
 
+import com.example.alex.homeauto.adapters.ModuleAdapter;
 import com.example.alex.homeauto.model.Module;
+import com.example.alex.homeauto.model.ModuleType;
 import com.example.alex.homeauto.net.API;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import retrofit.Callback;
@@ -20,12 +25,18 @@ public class HomeActivity extends ActionBarActivity {
 
     private API mApi;
     List<Module> mModuleList;
+    private ListView mModuleView;
+    private ModuleAdapter mModuleAdapter;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+        mModuleList = new ArrayList<>();
+        mModuleView = (ListView)findViewById(R.id.moduleView);
+        mModuleAdapter  = new ModuleAdapter(this, mModuleList);
+        mModuleView.setAdapter(mModuleAdapter);
 
-        mApi = new API("http://localhost");
+        mApi = ((HomeAutoApplication)this.getApplication()).getApi();
 
         mApi.listModules(new ListCallback());
 
@@ -61,11 +72,30 @@ public class HomeActivity extends ActionBarActivity {
         @Override
         public void success(List<Module> modules, Response response) {
             mModuleList = modules;
+            mModuleAdapter.clear();
+            mModuleAdapter.addAll(mModuleList);
+            mModuleAdapter.notifyDataSetChanged();
         }
 
         @Override
         public void failure(RetrofitError error) {
-            //some error
+
+            Log.e(error.getMessage(), "RetroError");
+
+            mModuleList = new ArrayList<Module>();
+            Module module = new Module();
+            module.setId("IDDDDD");
+            module.setType(ModuleType.FlIP);
+            mModuleList.add(module);
+
+            module = new Module();
+            module.setId("IDDDDD");
+            module.setType(ModuleType.FlIP);
+            mModuleList.add(module);
+
+            mModuleAdapter.clear();
+            mModuleAdapter.addAll(mModuleList);
+            mModuleAdapter.notifyDataSetChanged();
         }
     }
 }
