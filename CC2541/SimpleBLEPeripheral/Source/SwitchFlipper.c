@@ -90,11 +90,7 @@
 // Limited discoverable mode advertises for 30.72s, and then stops
 // General discoverable mode advertises indefinitely
 
-#if defined ( CC2540_MINIDK )
 #define DEFAULT_DISCOVERABLE_MODE             GAP_ADTYPE_FLAGS_LIMITED
-#else
-#define DEFAULT_DISCOVERABLE_MODE             GAP_ADTYPE_FLAGS_GENERAL
-#endif  // defined ( CC2540_MINIDK )
 
 // Minimum connection interval (units of 1.25ms, 80=100ms) if automatic parameter update request is enabled
 #define DEFAULT_DESIRED_MIN_CONN_INTERVAL     80
@@ -143,6 +139,9 @@
  */
 static uint8 switchFlipper_TaskID;   // Task ID for internal task/event processing
 
+static uint8 PWM_state;   //
+
+
 static gaprole_States_t gapProfileState = GAPROLE_INIT;
 
 // GAP - SCAN RSP data (max size = 31 bytes)
@@ -185,9 +184,11 @@ static void switchFlipper_ProcessOSALMsg( osal_event_hdr_t *pMsg );
 static void peripheralStateNotificationCB( gaprole_States_t newState );
 static void performPeriodicTask( void );
 static void simpleProfileChangeCB( uint8 paramID );
-
+static void initGPIO( void );
+//static void initPWMTimer( void );
 static void switchFlipper_HandleKeys( uint8 shift, uint8 keys );
-
+//static void startPWM( void );
+//static void stopPWM( void );
 
 /*********************************************************************
  * PROFILE CALLBACKS
@@ -324,25 +325,9 @@ void SwitchFlipper_Init( uint8 task_id )
   RegisterForKeys( switchFlipper_TaskID );
 
   // makes sure LEDs are off
- //HalLedSet( (HAL_LED_1 | HAL_LED_2), HAL_LED_MODE_OFF );
-
-  // For keyfob board set GPIO pins into a power-optimized state
-  // Note that there is still some leakage current from the buzzer,
-  // accelerometer, LEDs, and buttons on the PCB.
-  //TODO
-  P0SEL = 0; // Configure Port 0 as GPIO
-  P1SEL = 0; // Configure Port 1 as GPIO
-  P2SEL = 0; // Configure Port 2 as GPIO
-
-  P0DIR = 0xFC; // Port 0 pins P0.0 and P0.1 as input (buttons),
-                // all others (P0.2-P0.7) as output
-  P1DIR = 0xFF; // All port 1 pins (P1.0-P1.7) as output
-  P2DIR = 0x1F; // All port 1 pins (P2.0-P2.4) as output
-
-  P0 = 0x03; // All pins on port 0 to low except for P0.0 and P0.1 (buttons)
-  P1 = 0;   // All pins on port 1 to low
-  P2 = 0;   // All pins on port 2 to low
-
+  //HalLedSet( (HAL_LED_1 | HAL_LED_2), HAL_LED_MODE_FLASH );
+  initGPIO();
+ 
   // Register callback with SimpleGATTprofile
   VOID SimpleProfile_RegisterAppCBs( &switchFlipper_SimpleProfileCBs );
 
@@ -350,18 +335,132 @@ void SwitchFlipper_Init( uint8 task_id )
   // This reduces active current while radio is active and CC254x MCU
   // is halted
   HCI_EXT_ClkDivOnHaltCmd( HCI_EXT_ENABLE_CLK_DIVIDE_ON_HALT );
-
-#if defined ( DC_DC_P0_7 )
-
-  // Enable stack to toggle bypass control on TPS62730 (DC/DC converter)
-  HCI_EXT_MapPmIoPortCmd( HCI_EXT_PM_IO_PORT_P0, HCI_EXT_PM_IO_PORT_PIN7 );
-
-#endif // defined ( DC_DC_P0_7 )
-
   // Setup a delayed profile startup
   osal_set_event( switchFlipper_TaskID, SBP_START_DEVICE_EVT );
-
 }
+
+static void initGPIO( void ){
+  P0SEL = 0; // Configure Port 0 as GPIO
+  P1SEL = 0; // Configure Port 1 as GPIO
+  P2SEL = 0; // Configure Port 2 as GPIO
+
+  P0DIR = 0xFC; // Port 0 pins P0.0 and P0.1 as input (buttons),
+                // all others (P0.2-P0.7) as output
+  P1DIR = 0xFF; // All port 1 pins (P1.0-P1.7) as output
+  P2DIR = 0x1F; // All port 2 pins (P2.0-P2.4) as output
+
+  P0 = 0x03; // All pins on port 0 to low except for P0.0 and P0.1 (buttons)
+  P1 &= 0x7F ;
+  P2 = 0;   // All pins on port 2 to low
+  
+  P1IEN=0x00; // Disable all Interrupts on Port 1
+}
+
+
+void pwmInit(void)
+{
+    PERCFG |= 0x20;             // Timer 3 Alternate location 2
+    P1DIR |= 0x80;              // P1_7 = output
+    P1SEL |= 0x80;              // Peripheral function on P1_7
+
+    T3CTL &= ~0x10;             // Stop timer 3 (if it was running)
+    T3CTL |= 0x04;              // Clear timer 3
+    T3CTL &= ~0x08;             // Disable Timer 3 overflow interrupts
+    T3CTL |= 0x03;              // Timer 3 mode = 3 - Up/Down
+  
+    T3CCTL1 &= ~0x40;           // Disable channel 0 interrupts
+    T3CCTL1 |= 0x04;            // Ch1 mode = compare
+    T3CCTL1 |= 0x10;            // Ch0 output compare mode = toggle on compare
+    
+    //CLKCONSTA&= 0xC7;
+    CLKCONCMD|= 0x04<<3;
+    while((CLKCONSTA & 0x38)!=0x20);
+}
+
+/** \brief	Stops the buzzer
+*
+* Turn off the buzzer
+*
+*/
+void pwmStop(void)
+{
+    T3CTL &= ~0x10;             // Stop timer 3
+    HCI_EXT_ClkDivOnHaltCmd( HCI_EXT_ENABLE_CLK_DIVIDE_ON_HALT );
+    osal_pwrmgr_device( PWRMGR_BATTERY );
+}
+
+
+/** \brief	Starts the buzzer
+*
+* Starts the buzzer with given frequency
+*
+* \param[in]       frequency
+*     The frequency in Hertz of the sound to output
+* @return  1 successful - 0 if frequency invalid
+*/
+uint8 pwmStart(uint16 frequency)
+{
+    HCI_EXT_ClkDivOnHaltCmd( HCI_EXT_DISABLE_CLK_DIVIDE_ON_HALT );
+    osal_pwrmgr_device( PWRMGR_ALWAYS_ON );
+
+//    pwmInit();
+    uint8 prescaler = 0;
+
+    // Get current Timer tick divisor setting
+    uint8 tickSpdDiv = (CLKCONSTA & 0x38)>>3;
+
+    // Check if frequency too low
+    if (frequency < (244 >> tickSpdDiv)){   // 244 Hz = 32MHz / 256 (8bit counter) / 4 (up/down counter and toggle on compare) / 128 (max timer prescaler)
+        pwmStop();                       // A lower tick speed will lower this number accordingly.
+        return 0;
+    }
+
+    // Calculate nr of ticks required to achieve target frequency
+    uint32 ticks = (8000000/frequency) >> tickSpdDiv;      // 8000000 = 32M / 4;
+
+    // Fit this into an 8bit counter using the timer prescaler
+    while ((ticks & 0xFFFFFF00) != 0)
+    {
+        ticks >>= 1;
+        prescaler += 32;
+    }
+
+    // Update registers
+    T3CTL &= ~0xE0;
+    T3CTL |= prescaler;
+    T3CC0 = (uint8)ticks;
+
+    // Start timer
+    T3CTL |= 0x10;
+    
+    return 1;
+}
+
+
+
+/*
+static void initPWMTimer( void ){
+  PERCFG=0x00;// Reset PERCFG
+  PERCFG |=(1<<5);//Timer 3 Alternativ 2
+  P2SEL |= 0xF0;//Give Timer 3 preference
+  CLKCONSTA&= 0xC7;
+  CLKCONSTA|= 7<<3;
+  T3CCTL1 = (7 << 6) | (5 << 3) | (1 << 2);//Set Timer 3 channel 1 to compare mode with toggling in up and down
+  T3CTL= (7 << 3) | (1 << 2) | 0x00;// Free running, clear counter, no interrupt, lots of divisions
+  T3CC1 = 0xBF;//Duty 
+}
+
+static void startPWM( void )
+{
+  T3CTL|=(1<<4); //Start timer 3
+}
+
+static void stopPWM( void )
+{
+ T3CTL&=~(1<<4);// Stop Timer 1
+ T3CTL|=(1 << 2);// Reset T1CNT=0x0000 
+}
+*/
 
 /*********************************************************************
  * @fn      SwitchFlipper_ProcessEvent
@@ -406,23 +505,20 @@ uint16 SwitchFlipper_ProcessEvent( uint8 task_id, uint16 events )
     VOID GAPBondMgr_Register( &switchFlipper_BondMgrCBs );
 
     // Set timer for first periodic event
-    osal_start_timerEx( switchFlipper_TaskID, SBP_PERIODIC_EVT, SBP_PERIODIC_EVT_PERIOD );
+      pwmInit();
+      PWM_state = 0;
+     // osal_start_timerEx( switchFlipper_TaskID, SBP_PWM_EVT, 25 );
 
     return ( events ^ SBP_START_DEVICE_EVT );
   }
+  
+  if ( events & SBP_PWM_STOP_EVT ){     
+     pwmStop();
+     PWM_state=0;
+           HalLedSet( (HAL_LED_1 | HAL_LED_2), HAL_LED_MODE_OFF );
 
-  if ( events & SBP_PERIODIC_EVT )
-  {
-    // Restart timer
-    if ( SBP_PERIODIC_EVT_PERIOD )
-    {
-      osal_start_timerEx( switchFlipper_TaskID, SBP_PERIODIC_EVT, SBP_PERIODIC_EVT_PERIOD );
-    }
-
-    // Perform periodic application task
-    performPeriodicTask();
-
-    return (events ^ SBP_PERIODIC_EVT);
+    //P1 ^= (0x01<<7) ;
+    return (events ^ SBP_PWM_STOP_EVT);
   }
 
   // Discard unknown events
@@ -472,21 +568,22 @@ static void switchFlipper_HandleKeys( uint8 shift, uint8 keys )
   if ( keys & HAL_KEY_SW_1 )
   {
     SK_Keys |= SK_KEY_LEFT;
+    HalLedSet( HAL_LED_1, HAL_LED_MODE_ON );
+    pwmStart(100);
+    osal_start_timerEx( switchFlipper_TaskID, SBP_PWM_STOP_EVT, 400 ); 
   }
 
   if ( keys & HAL_KEY_SW_2 )
   {
-
     SK_Keys |= SK_KEY_RIGHT;
-
+    HalLedSet( HAL_LED_2, HAL_LED_MODE_ON );
+    pwmStart(500);
+    osal_start_timerEx( switchFlipper_TaskID, SBP_PWM_STOP_EVT, 400 ); 
     // if device is not in a connection, pressing the right key should toggle
     // advertising on and off
-    // Note:  If PLUS_BROADCASTER is define this condition is ignored and
-    //        Device may advertise during connections as well. 
-#ifndef PLUS_BROADCASTER  
+
     if( gapProfileState != GAPROLE_CONNECTED )
     {
-#endif // PLUS_BROADCASTER
       uint8 current_adv_enabled_status;
       uint8 new_adv_enabled_status;
 
@@ -504,9 +601,7 @@ static void switchFlipper_HandleKeys( uint8 shift, uint8 keys )
 
       //change the GAP advertisement status to opposite of current status
       GAPRole_SetParameter( GAPROLE_ADVERT_ENABLED, sizeof( uint8 ), &new_adv_enabled_status );
-#ifndef PLUS_BROADCASTER
     }
-#endif // PLUS_BROADCASTER
   }
 
   // Set the value of the keys state to the Simple Keys Profile;
@@ -560,6 +655,8 @@ static void peripheralStateNotificationCB( gaprole_States_t newState )
 
     case GAPROLE_ADVERTISING:
       {
+        //HalLedSet( HAL_LED_1, HAL_LED_MODE_FLASH );
+        //HalLedSet( HAL_LED_2, HAL_LED_MODE_FLASH );
       }
       break;
 
@@ -586,9 +683,9 @@ static void peripheralStateNotificationCB( gaprole_States_t newState )
       }
       break;      
     case GAPROLE_WAITING:
-      {
+      {}
       break;
-
+      
     case GAPROLE_WAITING_AFTER_TIMEOUT:
       {
           
@@ -672,12 +769,14 @@ static void simpleProfileChangeCB( uint8 paramID )
   {
     case SIMPLEPROFILE_CHAR1:
       SimpleProfile_GetParameter( SIMPLEPROFILE_CHAR1, &newValue );
-      //TODO
+      pwmStart(500);
+      osal_start_timerEx( switchFlipper_TaskID, SBP_PWM_STOP_EVT, 400 ); 
       break;
 
     case SIMPLEPROFILE_CHAR3:
       SimpleProfile_GetParameter( SIMPLEPROFILE_CHAR3, &newValue );
-
+      pwmStart(100);
+      osal_start_timerEx( switchFlipper_TaskID, SBP_PWM_STOP_EVT, 400 ); 
       break;
 
     default:

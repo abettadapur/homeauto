@@ -96,9 +96,7 @@ int main(void)
   // Final board initialization
   InitBoard( OB_READY );
 
-  #if defined ( POWER_SAVING )
-    osal_pwrmgr_device( PWRMGR_BATTERY );
-  #endif
+  //osal_pwrmgr_device( PWRMGR_BATTERY );
 
   /* Start OSAL */
   osal_start_system(); // No Return from here
